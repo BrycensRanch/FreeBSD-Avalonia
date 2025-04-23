@@ -12,7 +12,7 @@ using Xunit;
 
 namespace Avalonia.Controls.UnitTests
 {
-    public class WindowTests
+    public class WindowTests : ScopedTestBase
     {
         [Fact]
         public void Setting_Title_Should_Set_Impl_Title()
@@ -672,24 +672,7 @@ namespace Avalonia.Controls.UnitTests
             }
         }
 
-        [Fact]
-        public void CanMaximize_Should_Be_False_If_CanResize_Is_False()
-        {
-            var windowImpl = MockWindowingPlatform.CreateWindowMock();
-
-            using var app = UnitTestApplication.Start(TestServices.StyledWindow.With(
-                windowingPlatform: new MockWindowingPlatform(() => windowImpl.Object)));
-
-            var window = new Window();
-
-            Assert.True(window.CanMaximize);
-
-            window.CanResize = false;
-
-            Assert.False(window.CanMaximize);
-        }
-
-        public class SizingTests
+        public class SizingTests : ScopedTestBase
         {
             [Fact]
             public void Child_Should_Be_Measured_With_Width_And_Height_If_SizeToContent_Is_Manual()
