@@ -57,7 +57,7 @@ namespace Avalonia.Android.Platform.SkiaPlatform
             _clipboard = new ClipboardImpl(avaloniaView.Context.GetSystemService(Context.ClipboardService).JavaCast<ClipboardManager>());
             _screens = new AndroidScreens(avaloniaView.Context);
 
-            if (context is Activity mainActivity)
+            if (avaloniaView.Context is Activity mainActivity)
             {
                 _insetsManager = new AndroidInsetsManager(mainActivity, this);
                 _storageProvider = new AndroidStorageProvider(mainActivity);
@@ -72,11 +72,16 @@ namespace Avalonia.Android.Platform.SkiaPlatform
             var gl = new EglGlPlatformSurface(this);
             var framebuffer = new FramebufferManager(this);
             Surfaces = [gl, framebuffer, _view];
+            var gl = new EglGlPlatformSurface(this);
+            var framebuffer = new FramebufferManager(this);
+            Surfaces = [gl, framebuffer, _view];
             Handle = new AndroidViewControlHandle(_view);
         }
 
         public IInputRoot? InputRoot { get; private set; }
 
+        public Size ClientSize => _view.Size.ToSize(RenderScaling);
+        public double RenderScaling => _view.Scaling;
         public Size ClientSize => _view.Size.ToSize(RenderScaling);
         public double RenderScaling => _view.Scaling;
 
@@ -122,11 +127,6 @@ namespace Avalonia.Android.Platform.SkiaPlatform
             InputRoot = inputRoot;
         }
 
-        void Draw()
-        {
-            Paint?.Invoke(new Rect(new Point(0, 0), ClientSize));
-        }
-
         public virtual void Dispose()
         {
             _systemNavigationManager.Dispose();
@@ -134,6 +134,7 @@ namespace Avalonia.Android.Platform.SkiaPlatform
             _view = null!;
         }
 
+        protected void OnResized(Size size)
         protected void OnResized(Size size)
         {
             Resized?.Invoke(size, WindowResizeReason.Unspecified);
@@ -144,23 +145,17 @@ namespace Avalonia.Android.Platform.SkiaPlatform
             Resized?.Invoke(size, WindowResizeReason.Layout);
         }
 
-        class ViewImpl : InvalidationAwareSurfaceView, ISurfaceHolderCallback
+        sealed class ViewImpl : InvalidationAwareSurfaceView, IInitEditorInfo
         {
             private readonly TopLevelImpl _tl;
             private Size _oldSize;
+            private double _oldScaling;
 
             public ViewImpl(Context context, TopLevelImpl tl, bool placeOnTop) : base(context)
             {
                 _tl = tl;
                 if (placeOnTop)
                     SetZOrderOnTop(true);
-            }
-
-            public TopLevelImpl TopLevelImpl => _tl;
-
-            protected override void Draw()
-            {
-                _tl.Draw();
             }
 
             protected override void DispatchDraw(global::Android.Graphics.Canvas canvas)
@@ -185,17 +180,65 @@ namespace Avalonia.Android.Platform.SkiaPlatform
                 base.DispatchDraw(canvas);
             }
 
-            void ISurfaceHolderCallback.SurfaceChanged(ISurfaceHolder holder, Format format, int width, int height)
+            protected override bool DispatchGenericPointerEvent(MotionEvent? e)
             {
-                var newSize = new PixelSize(width, height).ToSize(_tl.RenderScaling);
+                var result = _tl._pointerHelper.DispatchMotionEvent(e, out var callBase);
+                var baseResult = callBase && base.DispatchGenericPointerEvent(e);
+
+                return result ?? baseResult;
+            }
+
+            public override bool DispatchTouchEvent(MotionEvent? e)
+            {
+                var result = _tl._pointerHelper.DispatchMotionEvent(e, out var callBase);
+                var baseResult = callBase && base.DispatchTouchEvent(e);
+
+                return result ?? baseResult;
+            }
+
+            public override bool DispatchKeyEvent(KeyEvent? e)
+            {
+                var res = _tl._keyboardHelper.DispatchKeyEvent(e, out var callBase);
+                var baseResult = callBase && base.DispatchKeyEvent(e);
+
+                return res ?? baseResult;
+            }
+
+            public override void SurfaceChanged(ISurfaceHolder holder, Format format, int width, int height)
+            {
+                base.SurfaceChanged(holder, format, width, height);
+
+                var newSize = Size.ToSize(Scaling);
+                var newScaling = Scaling;
 
                 if (newSize != _oldSize)
                 {
                     _oldSize = newSize;
                     _tl.OnResized(newSize);
                 }
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                if (newScaling != _oldScaling)
+                {
+                    _oldScaling =  newScaling;
+                    _tl.ScalingChanged?.Invoke(newScaling);
+                }
+            }
 
-                base.SurfaceChanged(holder, format, width, height);
+            public sealed override bool OnCheckIsTextEditor()
+            {
+                return true;
+            }
+
+            private Func<TopLevelImpl, EditorInfo, IInputConnection>? _initEditorInfo;
+
+            public void InitEditorInfo(Func<TopLevelImpl, EditorInfo, IInputConnection> init)
+            {
+                _initEditorInfo = init;
+            }
+
+            public override IInputConnection OnCreateInputConnection(EditorInfo? outAttrs)
+            {
+                return _initEditorInfo?.Invoke(_tl, outAttrs!)!;
             }
         }
 
@@ -236,14 +279,8 @@ namespace Avalonia.Android.Platform.SkiaPlatform
 
         IntPtr EglGlPlatformSurface.IEglWindowGlPlatformSurfaceInfo.Handle => ((IPlatformHandle)_view).Handle;
         bool EglGlPlatformSurface.IEglWindowGlPlatformSurfaceInfoWithWaitPolicy.SkipWaits => true;
-
-        public PixelSize Size => _view.Size;
-
-        public double Scaling => RenderScaling;
-
-        internal AndroidKeyboardEventsHelper<TopLevelImpl> KeyboardHelper => _keyboardHelper;
-
-        internal AndroidMotionEventsHelper PointerHelper => _pointerHelper;
+        PixelSize EglGlPlatformSurface.IEglWindowGlPlatformSurfaceInfo.Size => _view.Size;
+        double EglGlPlatformSurface.IEglWindowGlPlatformSurfaceInfo.Scaling => _view.Scaling;
 
         public void SetTransparencyLevelHint(IReadOnlyList<WindowTransparencyLevel> transparencyLevels)
         {
