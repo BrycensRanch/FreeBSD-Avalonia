@@ -24,7 +24,7 @@ namespace Avalonia.Markup.Xaml.XamlIl.CompilerExtensions.Transformers
 
                 if (binding.Arguments.Count > 0 && binding.Arguments[0] is XamlAstTextNode bindingPathText)
                 {
-                    var nodes = GetBindingPath(bindingPathText);
+                    var (nodes, _) = BindingExpressionGrammar.Parse(bindingPathText.Text);
 
                     if (convertedNode != null)
                     {
@@ -49,7 +49,7 @@ namespace Avalonia.Markup.Xaml.XamlIl.CompilerExtensions.Transformers
 
                     if (bindingPathAssignment != null && bindingPathAssignment.Values[0] is XamlAstTextNode pathValue)
                     {
-                        var nodes = GetBindingPath(pathValue);
+                        var (nodes, _) = BindingExpressionGrammar.Parse(pathValue.Text);
 
                         if (nodes.Count == 1 && nodes[0] is BindingExpressionGrammar.EmptyExpressionNode)
                         {
