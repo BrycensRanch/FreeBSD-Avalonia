@@ -2,11 +2,14 @@
   <PropertyGroup Condition="$([MSBuild]::VersionGreaterThanOrEquals($(NETCoreSdkVersion), '7.0'))">
     <DefineConstants>$(DefineConstants);NET7SDK</DefineConstants>
   </PropertyGroup>
-    <Target Name="PrefixPackageIdForFork"
-        BeforeTargets="Pack"
-        Condition="!$(PackageId.StartsWith('BrycensRanch.'))">
-  <PropertyGroup>
-    <PackageId>BrycensRanch.$(PackageId)</PackageId>
-  </PropertyGroup>
-</Target>
+<PropertyGroup
+  Condition="!$([System.String]::Copy('$(PackageId)').StartsWith('BrycensRanch.'))">
+  <_BasePackageId Condition="'$(PackageId)' != ''">$(PackageId)</_BasePackageId>
+  <_BasePackageId Condition="'$(_BasePackageId)' == ''">$(MSBuildProjectName)</_BasePackageId>
+
+  <PackageId
+    Condition="!$([System.String]::Copy('$(_BasePackageId)').StartsWith('BrycensRanch.'))">
+    BrycensRanch.$(_BasePackageId)
+  </PackageId>
+</PropertyGroup>
 </Project>
