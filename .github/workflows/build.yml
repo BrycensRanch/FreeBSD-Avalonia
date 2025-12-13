@@ -1,0 +1,33 @@
+name: Build
+on:
+    push:
+        branches:
+        - "*"
+    pull_request:
+        branches:
+        - "*"
+jobs:
+    build:
+        runs-on: windows-latest
+        steps:
+        - name: Checkout code
+          uses: actions/checkout@v6
+          with:
+            checkout-submodules: true
+            fetch-depth: 0
+        - name: Setup dotnet
+          uses: actions/setup-dotnet@v5
+          with:
+            dotnet-version: 8.0.x
+        - name: Install Workloads
+          run: |
+            dotnet workload install android ios maccatalyst wasm-tools
+
+        - name: Build Avalonia.FreeDesktop
+          shell: bash
+          run: |
+            dotnet pack src/Avalonia.FreeDesktop/Avalonia.FreeDesktop.csproj --configuration Release --output build/output
+        - name: Build Avalonia.X11
+          shell: bash
+          run: |
+            dotnet pack src/Avalonia.X11/Avalonia.X11.csproj --configuration Release --output build/output
