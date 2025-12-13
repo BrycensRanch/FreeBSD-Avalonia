@@ -24,4 +24,12 @@ jobs:
             dotnet workload install android macos wasm-tools
         - name: Build Avalonia
           run: |
-            ./build.sh --target CreateNugetPackages --configuration=Release
+            ./build.sh --target CreateNugetPackages --configuration=Release --force--nuget-version 11.3.9
+        - name: Upload Artifacts
+          uses: actions/upload-artifact@v3
+          with:
+            name: Avalonia
+            path: artifacts/nuget
+        - name: Publish NuGet packages
+          run: |
+            dotnet nuget push artifacts/nuget/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}

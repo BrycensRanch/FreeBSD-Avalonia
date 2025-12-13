@@ -1,5 +1,15 @@
 <Project>
   <PropertyGroup Condition="$([MSBuild]::VersionGreaterThanOrEquals($(NETCoreSdkVersion), '7.0'))">
     <DefineConstants>$(DefineConstants);NET7SDK</DefineConstants>
-  </PropertyGroup>  
+  </PropertyGroup>
+  <Target Name="PrefixPackageIdForFork"
+        BeforeTargets="Pack"
+        Condition="
+          '$(IsPackable)' == 'true'
+          and !$(PackageId.StartsWith('BrycensRanch.'))
+        ">
+  <PropertyGroup>
+    <PackageId>BrycensRanch.$(PackageId)</PackageId>
+  </PropertyGroup>
+</Target>
 </Project>
