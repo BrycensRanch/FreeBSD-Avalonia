@@ -311,17 +311,27 @@ partial class Build : NukeBuild
         .DependsOn(CreateIntermediateNugetPackages)
         .Executes(() =>
         {
-            BuildTasksPatcher.PatchBuildTasksInPackage(Parameters.NugetIntermediateRoot / "Avalonia.Build.Tasks." +
-                                                       Parameters.Version + ".nupkg",
-                                                       IlRepackTool);
+            string prefix = "BrycensRanch.";
+
+            BuildTasksPatcher.PatchBuildTasksInPackage(
+                Parameters.NugetIntermediateRoot / $"{prefix}Avalonia.Build.Tasks.{Parameters.Version}.nupkg",
+                IlRepackTool);
+
             var config = Numerge.MergeConfiguration.LoadFile(RootDirectory / "nukebuild" / "numerge.config");
             EnsureCleanDirectory(Parameters.NugetRoot);
-            if(!Numerge.NugetPackageMerger.Merge(Parameters.NugetIntermediateRoot, Parameters.NugetRoot, config,
-                new NumergeNukeLogger()))
+
+            if (!Numerge.NugetPackageMerger.Merge(
+                    Parameters.NugetIntermediateRoot,
+                    Parameters.NugetRoot,
+                    config,
+                    new NumergeNukeLogger()))
                 throw new Exception("Package merge failed");
+
+            // Handle ref assemblies with prefixed package name
             RefAssemblyGenerator.GenerateRefAsmsInPackage(
-                Parameters.NugetRoot / $"Avalonia.{Parameters.Version}.nupkg",
-                Parameters.NugetRoot / $"Avalonia.{Parameters.Version}.snupkg");
+                Parameters.NugetRoot / $"{prefix}Avalonia.{Parameters.Version}.nupkg",
+                Parameters.NugetRoot / $"{prefix}Avalonia.{Parameters.Version}.snupkg");
+
         });
     
     Target ValidateApiDiff => _ => _
