@@ -26,7 +26,7 @@ jobs:
           run: |
             ./build.sh --target CreateNugetPackages --configuration=Release --force--nuget-version 11.3.9
         - name: Upload Artifacts
-          uses: actions/upload-artifact@v3
+          uses: actions/upload-artifact@v6
           with:
             name: Avalonia
             path: artifacts/nuget
