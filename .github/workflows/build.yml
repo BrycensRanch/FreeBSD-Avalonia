@@ -34,7 +34,10 @@ jobs:
           run: |
             for pkg in artifacts/nuget/BrycensRanch*.nupkg; do
             case "$pkg" in
-                *X11.nupkg|*Desktop.nupkg)
+                *FreeDesktop*.nupkg)
+                echo "Skipping $pkg (FreeDesktop package)"
+                ;;
+                *X11*.nupkg|*Desktop*.nupkg)
                 echo "Publishing $pkg"
                 dotnet nuget push "$pkg" --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
                 ;;
