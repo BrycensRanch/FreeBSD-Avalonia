@@ -14,4 +14,14 @@
       <CreateHardLinksForCopyLocalIfPossible>true</CreateHardLinksForCopyLocalIfPossible>
       <CreateHardLinksForPublishFilesIfPossible>true</CreateHardLinksForPublishFilesIfPossible>
   </PropertyGroup>
+    <Target Name="PrefixPackageIdForFork"
+        BeforeTargets="Pack"
+        Condition="
+          '$(IsPackable)' == 'true'
+          and !$(PackageId.StartsWith('BrycensRanch.'))
+        ">
+  <PropertyGroup>
+    <PackageId>BrycensRanch.$(PackageId)</PackageId>
+  </PropertyGroup>
+</Target>
 </Project>
