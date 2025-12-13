@@ -18,10 +18,10 @@ jobs:
         - name: Setup dotnet
           uses: actions/setup-dotnet@v5
           with:
-            dotnet-version: 8.0.x
+            global-json-file: global.json
         - name: Install Workloads
           run: |
             dotnet workload install android macos wasm-tools
         - name: Build Avalonia
           run: |
-            ./build.sh --target Package --skip-tests 
+            ./build.sh --target CreateNugetPackages --configuration=Release
