@@ -32,17 +32,6 @@ jobs:
             path: artifacts/nuget
         - name: Publish NuGet packages
           run: |
-            for pkg in artifacts/nuget/BrycensRanch*.nupkg; do
-            case "$pkg" in
-                *FreeDesktop*.nupkg)
-                echo "Skipping $pkg (FreeDesktop package)"
-                ;;
-                *X11*.nupkg|*Desktop*.nupkg)
-                echo "Publishing $pkg"
-                dotnet nuget push "$pkg" --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
-                ;;
-                *)
-                echo "Skipping $pkg (does not match suffix X11 or Desktop)"
-                ;;
-            esac
-            done
+            dotnet nuget push artifacts/nuget/BrycensRanch*.nupkg \
+             --source https://api.nuget.org/v3/index.json \
+             --api-key ${{ secrets.NUGET_API_KEY }}
