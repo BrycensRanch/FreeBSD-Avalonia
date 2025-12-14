@@ -7,7 +7,7 @@ on:
         branches:
         - "*"
 jobs:
-    build:
+    ubuntu:
         runs-on: ubuntu-latest
         steps:
         - name: Checkout code
@@ -32,17 +32,58 @@ jobs:
             path: artifacts/nuget
         - name: Publish NuGet packages
           run: |
-            for pkg in artifacts/nuget/BrycensRanch*.nupkg; do
-            case "$pkg" in
-                *FreeDesktop*.nupkg)
-                echo "Skipping $pkg (FreeDesktop package)"
-                ;;
-                *X11*.nupkg|*Desktop*.nupkg)
-                echo "Publishing $pkg"
-                dotnet nuget push "$pkg" --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
-                ;;
-                *)
-                echo "Skipping $pkg (does not match suffix X11 or Desktop)"
-                ;;
-            esac
-            done
+            dotnet nuget push artifacts/nuget/BrycensRanch*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate
+    windows:
+        runs-on: windows-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
+              with:
+                  submodules: recursive
+                  fetch-depth: 0
+            - name: Setup dotnet
+              uses: actions/setup-dotnet@v5
+              with:
+                  global-json-file: global.json
+            - name: Install Workloads
+              run: |
+                  dotnet workload install android macos wasm-tools
+            - name: Build Avalonia
+              shell: bash
+              run: |
+                  ./build.sh --target CreateNugetPackages --configuration=Release --force--nuget-version 11.3.9
+            - name: Upload Artifacts
+              uses: actions/upload-artifact@v6
+              with:
+                  name: Avalonia
+                  path: artifacts/nuget
+            - name: Publish NuGet packages
+              shell: bash
+              run: |
+                dotnet nuget push artifacts/nuget/BrycensRanch*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate
+    macos:
+        runs-on: macos-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
+              with:
+                  submodules: recursive
+                  fetch-depth: 0
+            - name: Setup dotnet
+              uses: actions/setup-dotnet@v5
+              with:
+                  global-json-file: global.json
+            - name: Install Workloads
+              run: |
+                  dotnet workload install android macos wasm-tools
+            - name: Build Avalonia
+              run: |
+                  ./build.sh --target CreateNugetPackages --configuration=Release --force--nuget-version 11.3.9
+            - name: Upload Artifacts
+              uses: actions/upload-artifact@v6
+              with:
+                  name: Avalonia
+                  path: artifacts/nuget
+            - name: Publish NuGet packages
+              run: |
+                  dotnet nuget push artifacts/nuget/BrycensRanch*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate
