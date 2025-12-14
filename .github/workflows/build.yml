@@ -28,7 +28,7 @@ jobs:
         - name: Upload Artifacts
           uses: actions/upload-artifact@v6
           with:
-            name: Avalonia
+            name: Avalonia-${{runner.os}}
             path: artifacts/nuget
         - name: Publish NuGet packages
           run: |
@@ -49,13 +49,12 @@ jobs:
               run: |
                   dotnet workload install android macos wasm-tools
             - name: Build Avalonia
-              shell: bash
               run: |
-                  ./build.sh --target CreateNugetPackages --configuration=Release --force--nuget-version 11.3.9
+                  ./build.ps1 --target CreateNugetPackages --configuration=Release --force--nuget-version 11.3.9
             - name: Upload Artifacts
               uses: actions/upload-artifact@v6
               with:
-                  name: Avalonia
+                  name: Avalonia-${{runner.os}}
                   path: artifacts/nuget
             - name: Publish NuGet packages
               shell: bash
@@ -82,7 +81,7 @@ jobs:
             - name: Upload Artifacts
               uses: actions/upload-artifact@v6
               with:
-                  name: Avalonia
+                  name: Avalonia-${{runner.os}}
                   path: artifacts/nuget
             - name: Publish NuGet packages
               run: |
