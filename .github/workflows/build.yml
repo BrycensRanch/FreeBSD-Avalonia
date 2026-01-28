@@ -24,7 +24,7 @@ jobs:
             dotnet workload install android macos wasm-tools
         - name: Build Avalonia
           run: |
-            ./build.sh --target CreateNugetPackages --configuration=Release --force--nuget-version 11.3.9
+            ./build.sh --target CreateNugetPackages --configuration=Release --force--nuget-version 11.3.11
         - name: Upload Artifacts
           uses: actions/upload-artifact@v6
           with:
@@ -50,7 +50,7 @@ jobs:
                   dotnet workload install android macos wasm-tools
             - name: Build Avalonia
               run: |
-                  ./build.ps1 --target CreateNugetPackages --configuration=Release --force--nuget-version 11.3.9
+                  ./build.ps1 --target CreateNugetPackages --configuration=Release --force--nuget-version 11.3.11
             - name: Upload Artifacts
               uses: actions/upload-artifact@v6
               with:
@@ -77,7 +77,7 @@ jobs:
                   dotnet workload install android macos wasm-tools
             - name: Build Avalonia
               run: |
-                  ./build.sh --target CreateNugetPackages --configuration=Release --force--nuget-version 11.3.9
+                  ./build.sh --target CreateNugetPackages --configuration=Release --force--nuget-version 11.3.11
             - name: Upload Artifacts
               uses: actions/upload-artifact@v6
               with:
